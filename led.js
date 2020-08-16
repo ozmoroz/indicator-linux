@@ -7,27 +7,25 @@
 
 // 0b00011011 -> 0b10001000 0b10001100 0b11001000 0b11001100
 
- expanded_bits = [0x88, 0x8C, 0xC8, 0xCC];
+// expanded_bits = [0x88, 0x8C, 0xC8, 0xCC];
+
+ // function expand_byte(b) {
+ //    return [ 
+ //        // Spread a byte across four bytes of a memoryview
+ //        expanded_bits[(b >> 6) & 0x3],
+ //        expanded_bits[(b >> 4) & 0x3],
+ //        expanded_bits[(b >> 2) & 0x3],
+ //        expanded_bits[(b) & 0x3]
+ //    ]
+ //}
 
  function expand_byte(b) {
-     return [ 
-         // Spread a byte across four bytes of a memoryview
-         expanded_bits[(b >> 6) & 0x3],
-         expanded_bits[(b >> 4) & 0x3],
-         expanded_bits[(b >> 2) & 0x3],
-         expanded_bits[(b) & 0x3]
-     ]
- }
-
- function expand_byte2(b) {
-     const res = [];
-     [3, 2, 1].forEach(ibit => {
+     return [6, 4, 2, 0].map(ibit =>
          // print ibit, byte, ((byte>>(2*ibit+1))&1), ((byte>>(2*ibit+0))&1), [hex(v) for v in tx]
-         res.push(((b >> (2 * ibit + 1))&1) * 0x60 +
-                  ((b >> (2 * ibit + 0))&1) * 0x06 +
-                    0x88)
-     })
-     return res;
+         ((b >> (ibit + 1))&1) * 0x60 +
+         ((b >> (ibit + 0))&1) * 0x06 +
+         0x88
+     )
  }
 
 // function _compress_byte(mv) {
@@ -44,14 +42,11 @@
 const spi = require('spi-device');
 
 function write_rgb(device, data) {
-    const tx = [0x00]
-    // const tx = []
+    const tx = []
     data.forEach(rgb => {	
     	rgb.forEach(byte => {
             const expanded = expand_byte(byte);
-	    const expanded2 = expand_byte2(byte);
 	    console.log('expanded: ', expanded);
-	    console.log('expanded2: ', expanded2);
 	    tx.push(...expand_byte(byte));
 	})
     })
@@ -59,14 +54,25 @@ function write_rgb(device, data) {
     // An SPI message is an array of one or more read+write transfers
     const message = [{
         sendBuffer: Buffer.from(tx),
+	speedHz: Math.floor(4/1.05e-6),
         byteLength: tx.length,
     }];
     return device.transferSync(message)	    
     // spi.xfer(tx, int(4/1.05e-6))
 }
 
-const leds = spi.openSync(0, 1);
-write_rgb(leds, [[1, 0, 0]]);
+const options = {};
+
+const leds = spi.openSync(0, 1, options);
+console.log('Device options: ', leds.getOptionsSync());
+
+// write_rgb(leds, [[0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255]]);
+const buf = new Array(20);
+for(let i=0; i<buf.length; i++){
+	buf[i] = [0, 255, 0]
+}
+write_rgb(leds, buf);
+
 leds.closeSync();
 
 
