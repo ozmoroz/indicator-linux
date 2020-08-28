@@ -4,11 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "format": "prettier-standard --format",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Sergey Stadnik",
   "license": "ISC",
   "dependencies": {
     "spi-device": "^3.1.0"
-  }
+  },
+  "devDependencies": {}
 }

@@ -28,33 +28,34 @@
 //     return v
 // }
 
-const spi = require('spi-device');
+const spi = require('spi-device')
 
-function write_rgb(device, data) {
-    const tx = [0x00]	
-    data.forEach(rgb => {	
-    	rgb.forEach(byte => {
-	    [3, 2, 1].forEach(ibit => {
-                // print ibit, byte, ((byte>>(2*ibit+1))&1), ((byte>>(2*ibit+0))&1), [hex(v) for v in tx]
-                tx.push(((byte>>(2*ibit+1))&1)*0x60 +
-                        ((byte>>(2*ibit+0))&1)*0x06 +
-                          0x88)
-	    })
-	})
+function write_rgb (device, data) {
+  const tx = [0x00]
+  data.forEach(rgb => {
+    rgb.forEach(byte => {
+      ;[3, 2, 1].forEach(ibit => {
+        // print ibit, byte, ((byte>>(2*ibit+1))&1), ((byte>>(2*ibit+0))&1), [hex(v) for v in tx]
+        tx.push(
+          ((byte >> (2 * ibit + 1)) & 1) * 0x60 +
+            ((byte >> (2 * ibit + 0)) & 1) * 0x06 +
+            0x88
+        )
+      })
     })
-    // print [hex(v) for v in tx]
-    // An SPI message is an array of one or more read+write transfers
-    const message = [{
-        sendBuffer: Buffer.from(tx),
-        byteLength: tx.length,
-    }];
-    return device.transferSync(message)	    
-    // spi.xfer(tx, int(4/1.05e-6))
+  })
+  // print [hex(v) for v in tx]
+  // An SPI message is an array of one or more read+write transfers
+  const message = [
+    {
+      sendBuffer: Buffer.from(tx),
+      byteLength: tx.length
+    }
+  ]
+  return device.transferSync(message)
+  // spi.xfer(tx, int(4/1.05e-6))
 }
 
-const leds = spi.openSync(0, 1);
-write_rgb(leds, [[0, 255, 0]]);
-leds.closeSync();
-
-
-
+const leds = spi.openSync(0, 1)
+write_rgb(leds, [[0, 255, 0]])
+leds.closeSync()
